@@ -39,7 +39,7 @@ class ContactsGetter {
     private static final String[] CONTACTS_PROJECTION_LOW_API = new String[]{ContactsContract.Contacts._ID,
         ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.STARRED};
     private static final String[] ADDITIONAL_DATA_PROJECTION = new String[]{ContactsContract.Contacts._ID,
-        ContactsContract.RawContacts.ACCOUNT_TYPE, ContactsContract.RawContacts.ACCOUNT_NAME};
+        ContactsContract.RawContacts.ACCOUNT_TYPE, ContactsContract.RawContacts.ACCOUNT_NAME, ContactsContract.RawContacts.CONTACT_ID};
     private Class<? extends ContactData> mContactDataClass;
 
     ContactsGetter(Context ctx, List<FieldType> enabledFields, String sorting, String[] selectionArgs, String selection) {
@@ -176,7 +176,7 @@ class ContactsGetter {
         }
         mainCursor.close();
         while (additionalDataCursor.moveToNext()) {
-            int id = additionalDataCursor.getInt(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts._ID));
+            int id = additionalDataCursor.getInt(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
             ContactData relatedContactData = contactsSparse.get(id);
             if (relatedContactData != null) {
                 String accountType = additionalDataCursor.getString(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
