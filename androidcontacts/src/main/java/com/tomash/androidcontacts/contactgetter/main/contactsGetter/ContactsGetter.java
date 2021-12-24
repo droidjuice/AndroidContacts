@@ -9,6 +9,7 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.CommonDataKinds.*;
 import android.util.SparseArray;
+
 import com.tomash.androidcontacts.contactgetter.entity.Email;
 import com.tomash.androidcontacts.contactgetter.entity.Organization;
 import com.tomash.androidcontacts.contactgetter.entity.Relation;
@@ -35,11 +36,11 @@ class ContactsGetter {
     private static final String ID_KEY = "contact_id";
     private static final String[] WITH_LABEL_PROJECTION = new String[]{ID_KEY, MAIN_DATA_KEY, LABEL_DATA_KEY, CUSTOM_LABEL_DATA_KEY};
     private static final String[] CONTACTS_PROJECTION = new String[]{ContactsContract.Contacts._ID, ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP,
-        ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.STARRED};
+            ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.STARRED};
     private static final String[] CONTACTS_PROJECTION_LOW_API = new String[]{ContactsContract.Contacts._ID,
-        ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.STARRED};
+            ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.STARRED};
     private static final String[] ADDITIONAL_DATA_PROJECTION = new String[]{ContactsContract.Contacts._ID,
-        ContactsContract.RawContacts.ACCOUNT_TYPE, ContactsContract.RawContacts.ACCOUNT_NAME, ContactsContract.RawContacts.CONTACT_ID};
+            ContactsContract.RawContacts.ACCOUNT_TYPE, ContactsContract.RawContacts.ACCOUNT_NAME, ContactsContract.RawContacts.CONTACT_ID};
     private Class<? extends ContactData> mContactDataClass;
 
     ContactsGetter(Context ctx, List<FieldType> enabledFields, String sorting, String[] selectionArgs, String selection) {
@@ -58,7 +59,7 @@ class ContactsGetter {
 
     private Cursor getContactsCursorWithSelection(String ordering, String selection, String[] selectionArgs) {
         return mResolver.query(ContactsContract.Contacts.CONTENT_URI,
-            android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 ? CONTACTS_PROJECTION : CONTACTS_PROJECTION_LOW_API, selection, selectionArgs, ordering);
+                android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 ? CONTACTS_PROJECTION : CONTACTS_PROJECTION_LOW_API, selection, selectionArgs, ordering);
     }
 
     private Cursor getContactsCursorWithAdditionalData() {
@@ -152,37 +153,39 @@ class ContactsGetter {
             boolean isFavorite = mainCursor.getInt(mainCursor.getColumnIndex(ContactsContract.Contacts.STARRED)) == 1;
             Uri photoUri = photoUriString == null ? Uri.EMPTY : Uri.parse(photoUriString);
             T data = (T) getContactData()
-                .setContactId(id)
-                .setLookupKey(lookupKey)
-                .setLastModificationDate(date)
-                .setPhoneList(phonesDataMap.get(id))
-                .setAddressesList(addressDataMap.get(id))
-                .setEmailList(emailDataMap.get(id))
-                .setWebsitesList(websitesDataMap.get(id))
-                .setNote(notesDataMap.get(id))
-                .setImAddressesList(imAddressesDataMap.get(id))
-                .setRelationsList(relationMap.get(id))
-                .setSpecialDatesList(specialDateMap.get(id))
-                .setNickName(nicknameDataMap.get(id))
-                .setOrganization(organisationDataMap.get(id))
-                .setSipAddress(sipDataMap.get(id))
-                .setNameData(nameDataMap.get(id))
-                .setPhotoUri(photoUri)
-                .setFavorite(isFavorite)
-                .setGroupList(groupsDataMap.get(id))
-                .setCompositeName(mainCursor.getString(mainCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)));
+                    .setContactId(id)
+                    .setLookupKey(lookupKey)
+                    .setLastModificationDate(date)
+                    .setPhoneList(phonesDataMap.get(id))
+                    .setAddressesList(addressDataMap.get(id))
+                    .setEmailList(emailDataMap.get(id))
+                    .setWebsitesList(websitesDataMap.get(id))
+                    .setNote(notesDataMap.get(id))
+                    .setImAddressesList(imAddressesDataMap.get(id))
+                    .setRelationsList(relationMap.get(id))
+                    .setSpecialDatesList(specialDateMap.get(id))
+                    .setNickName(nicknameDataMap.get(id))
+                    .setOrganization(organisationDataMap.get(id))
+                    .setSipAddress(sipDataMap.get(id))
+                    .setNameData(nameDataMap.get(id))
+                    .setPhotoUri(photoUri)
+                    .setFavorite(isFavorite)
+                    .setGroupList(groupsDataMap.get(id))
+                    .setCompositeName(mainCursor.getString(mainCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)));
             contactsSparse.put(id, data);
             result.add(data);
         }
         mainCursor.close();
         while (additionalDataCursor.moveToNext()) {
             int id = additionalDataCursor.getInt(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
-            ContactData relatedContactData = contactsSparse.get(id);
-            if (relatedContactData != null) {
-                String accountType = additionalDataCursor.getString(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
-                String accountName = additionalDataCursor.getString(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME));
-                relatedContactData.setAccountName(accountName)
-                    .setAccountType(accountType);
+            if (id >= 0) {
+                ContactData relatedContactData = contactsSparse.get(id);
+                if (relatedContactData != null) {
+                    String accountType = additionalDataCursor.getString(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
+                    String accountName = additionalDataCursor.getString(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME));
+                    relatedContactData.setAccountName(accountName)
+                            .setAccountType(accountType);
+                }
             }
         }
         additionalDataCursor.close();
@@ -212,19 +215,19 @@ class ContactsGetter {
     private SparseArray<Group> getGroupsMap() {
         SparseArray<Group> idGroupMap = new SparseArray<>();
         Cursor groupCursor = mResolver.query(
-            ContactsContract.Groups.CONTENT_URI,
-            new String[]{
-                ContactsContract.Groups._ID,
-                ContactsContract.Groups.TITLE
-            }, null, null, null
+                ContactsContract.Groups.CONTENT_URI,
+                new String[]{
+                        ContactsContract.Groups._ID,
+                        ContactsContract.Groups.TITLE
+                }, null, null, null
         );
         if (groupCursor != null) {
             while (groupCursor.moveToNext()) {
                 int id = groupCursor.getInt(groupCursor.getColumnIndex(ContactsContract.Groups._ID));
                 String title = groupCursor.getString(groupCursor.getColumnIndex(ContactsContract.Groups.TITLE));
                 idGroupMap.put(id, new Group()
-                    .setGroupId(id)
-                    .setGroupTitle(title));
+                        .setGroupId(id)
+                        .setGroupTitle(title));
             }
             groupCursor.close();
         }
@@ -255,22 +258,22 @@ class ContactsGetter {
 
     private SparseArray<NameData> getNameDataMap() {
         Cursor nameCursor = getCursorFromContentType(new String[]{ID_KEY, StructuredName.DISPLAY_NAME, StructuredName.GIVEN_NAME, StructuredName.PHONETIC_MIDDLE_NAME, StructuredName.PHONETIC_FAMILY_NAME,
-            StructuredName.FAMILY_NAME, StructuredName.PREFIX, StructuredName.MIDDLE_NAME, StructuredName.SUFFIX, StructuredName.PHONETIC_GIVEN_NAME}, StructuredName.CONTENT_ITEM_TYPE);
+                StructuredName.FAMILY_NAME, StructuredName.PREFIX, StructuredName.MIDDLE_NAME, StructuredName.SUFFIX, StructuredName.PHONETIC_GIVEN_NAME}, StructuredName.CONTENT_ITEM_TYPE);
         SparseArray<NameData> nameDataSparseArray = new SparseArray<>();
         if (nameCursor != null) {
             while (nameCursor.moveToNext()) {
                 int id = nameCursor.getInt(nameCursor.getColumnIndex(ID_KEY));
                 if (nameDataSparseArray.get(id) == null)
                     nameDataSparseArray.put(id, new NameData()
-                        .setFullName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.DISPLAY_NAME)))
-                        .setFirstName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.GIVEN_NAME)))
-                        .setSurname(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.FAMILY_NAME)))
-                        .setNamePrefix(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PREFIX)))
-                        .setMiddleName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.MIDDLE_NAME)))
-                        .setNameSuffix(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.SUFFIX)))
-                        .setPhoneticFirst(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_GIVEN_NAME)))
-                        .setPhoneticMiddle(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_MIDDLE_NAME)))
-                        .setPhoneticLast(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_FAMILY_NAME)))
+                            .setFullName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.DISPLAY_NAME)))
+                            .setFirstName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.GIVEN_NAME)))
+                            .setSurname(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.FAMILY_NAME)))
+                            .setNamePrefix(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PREFIX)))
+                            .setMiddleName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.MIDDLE_NAME)))
+                            .setNameSuffix(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.SUFFIX)))
+                            .setPhoneticFirst(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_GIVEN_NAME)))
+                            .setPhoneticMiddle(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_MIDDLE_NAME)))
+                            .setPhoneticLast(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_FAMILY_NAME)))
                     );
             }
             nameCursor.close();
@@ -358,8 +361,8 @@ class ContactsGetter {
                 String organizationName = noteCur.getString(noteCur.getColumnIndex(MAIN_DATA_KEY));
                 String organizationTitle = noteCur.getString(noteCur.getColumnIndex(TITLE));
                 idOrganizationMap.put(id, new Organization()
-                    .setName(organizationName)
-                    .setTitle(organizationTitle));
+                        .setName(organizationName)
+                        .setTitle(organizationTitle));
             }
             noteCur.close();
         }
@@ -392,7 +395,7 @@ class ContactsGetter {
         String orgWhere = ContactsContract.Data.MIMETYPE + " = ?";
         String[] orgWhereParams = new String[]{contentType};
         return mResolver.query(ContactsContract.Data.CONTENT_URI,
-            projection, orgWhere, orgWhereParams, null);
+                projection, orgWhere, orgWhereParams, null);
     }
 
     interface WithLabelCreator<T extends WithLabel> {
