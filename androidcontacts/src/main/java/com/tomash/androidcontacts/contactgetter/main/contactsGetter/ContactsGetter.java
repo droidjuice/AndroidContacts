@@ -1,27 +1,42 @@
 package com.tomash.androidcontacts.contactgetter.main.contactsGetter;
 
+import static android.provider.ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE;
+import static android.provider.ContactsContract.CommonDataKinds.Organization.TITLE;
+
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
-import android.provider.ContactsContract.CommonDataKinds.*;
+import android.provider.ContactsContract.CommonDataKinds.Event;
+import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
+import android.provider.ContactsContract.CommonDataKinds.Im;
+import android.provider.ContactsContract.CommonDataKinds.Nickname;
+import android.provider.ContactsContract.CommonDataKinds.Note;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.provider.ContactsContract.CommonDataKinds.SipAddress;
+import android.provider.ContactsContract.CommonDataKinds.StructuredName;
+import android.provider.ContactsContract.CommonDataKinds.StructuredPostal;
+import android.provider.ContactsContract.CommonDataKinds.Website;
 import android.util.SparseArray;
 
+import com.tomash.androidcontacts.contactgetter.entity.Address;
+import com.tomash.androidcontacts.contactgetter.entity.ContactData;
 import com.tomash.androidcontacts.contactgetter.entity.Email;
+import com.tomash.androidcontacts.contactgetter.entity.Group;
+import com.tomash.androidcontacts.contactgetter.entity.IMAddress;
+import com.tomash.androidcontacts.contactgetter.entity.NameData;
 import com.tomash.androidcontacts.contactgetter.entity.Organization;
+import com.tomash.androidcontacts.contactgetter.entity.PhoneNumber;
 import com.tomash.androidcontacts.contactgetter.entity.Relation;
-import com.tomash.androidcontacts.contactgetter.entity.*;
+import com.tomash.androidcontacts.contactgetter.entity.SpecialDate;
 import com.tomash.androidcontacts.contactgetter.interfaces.WithLabel;
 import com.tomash.androidcontacts.contactgetter.main.FieldType;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.provider.ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE;
-import static android.provider.ContactsContract.CommonDataKinds.Organization.TITLE;
+import java.util.Locale;
 
 class ContactsGetter {
     private ContentResolver mResolver;
@@ -59,7 +74,21 @@ class ContactsGetter {
 
     private Cursor getContactsCursorWithSelection(String ordering, String selection, String[] selectionArgs) {
         return mResolver.query(ContactsContract.Contacts.CONTENT_URI,
-                android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 ? CONTACTS_PROJECTION : CONTACTS_PROJECTION_LOW_API, selection, selectionArgs, ordering);
+                CONTACTS_PROJECTION, selection, selectionArgs, ordering);
+    }
+
+    //./adb shell content query --uri content://com.android.contacts/deleted_contacts > deleted_contacts.txt
+    private static final String[] DELETED_PROJECTION = new String[]{ContactsContract.DeletedContacts.CONTACT_ID};
+
+    private Cursor getDeletedContactsCursorWithSelection(long since) {
+        return mResolver.query(
+                ContactsContract.DeletedContacts.CONTENT_URI,
+                DELETED_PROJECTION,
+                String.format(Locale.ENGLISH,"%s >= %d", ContactsContract.DeletedContacts.CONTACT_DELETED_TIMESTAMP, since),
+                null,
+                ContactsContract.DeletedContacts.CONTACT_ID
+        );
+
     }
 
     private Cursor getContactsCursorWithAdditionalData() {
@@ -77,6 +106,23 @@ class ContactsGetter {
             e.printStackTrace();
         }
         return null;
+    }
+
+    <T extends ContactData> List<T> getDeletedContacts(long since) {
+        Cursor deletedUsers = getDeletedContactsCursorWithSelection(since);
+        List<T> result = new ArrayList<>();
+        if (deletedUsers == null)
+            return result;
+        int position = deletedUsers.getColumnIndex(ContactsContract.DeletedContacts.CONTACT_ID);
+
+        if (position < 0) throw new RuntimeException("NO DELETED CONTACT ID COLUMN");
+
+        while (deletedUsers.moveToNext()) {
+            int id = deletedUsers.getInt(position);
+            result.add((T) new ContactData(id) {
+            });
+        }
+        return result;
     }
 
     <T extends ContactData> List<T> getContacts() {
@@ -146,8 +192,7 @@ class ContactsGetter {
         while (mainCursor.moveToNext()) {
             int id = mainCursor.getInt(mainCursor.getColumnIndex(ContactsContract.Contacts._ID));
             long date = 0;
-            if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1)
-                date = mainCursor.getLong(mainCursor.getColumnIndex(ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP));
+            date = mainCursor.getLong(mainCursor.getColumnIndex(ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP));
             String photoUriString = mainCursor.getString(mainCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI));
             String lookupKey = mainCursor.getString(mainCursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
             boolean isFavorite = mainCursor.getInt(mainCursor.getColumnIndex(ContactsContract.Contacts.STARRED)) == 1;

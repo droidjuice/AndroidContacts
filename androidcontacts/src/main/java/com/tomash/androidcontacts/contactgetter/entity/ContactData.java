@@ -32,6 +32,13 @@ public abstract class ContactData {
     private Bitmap updatedBitmap;
     private boolean isFavorite;
 
+    public ContactData() {
+    }
+
+    public ContactData(int id) {
+        this.contactId = id;
+    }
+
     public int getContactId() {
         return contactId;
     }

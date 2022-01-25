@@ -275,6 +275,9 @@ public class ContactsGetterBuilder {
         return applyFilters(initGetter().getContacts());
     }
 
+    public List<ContactData> buildListOfDeletedContacts(long since) {
+        return applyFilters(initGetter().getDeletedContacts(since));
+    }
     /**
      * Gets contact by local id
      *
