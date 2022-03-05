@@ -3,6 +3,7 @@ package com.tomash.androidcontacts.contactgetter.entity;
 public class Organization {
     private String name = "";
     private String title = "";
+    private String department;
 
     public String getName() {
         return name;
@@ -19,7 +20,22 @@ public class Organization {
         setTitle(title);
     }
 
+    public Organization(String name, String title, String department) {
+        setName(name);
+        setTitle(title);
+        setDepartment(department);
+    }
+
     public Organization() {
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public Organization setDepartment(String department) {
+        this.department = department;
+        return this;
     }
 
     public String getTitle() {

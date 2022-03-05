@@ -1,6 +1,7 @@
 package com.tomash.androidcontacts.contactgetter.main.contactsGetter;
 
 import static android.provider.ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE;
+import static android.provider.ContactsContract.CommonDataKinds.Organization.DEPARTMENT;
 import static android.provider.ContactsContract.CommonDataKinds.Organization.TITLE;
 
 import android.content.ContentResolver;
@@ -399,15 +400,17 @@ class ContactsGetter {
 
     private SparseArray<Organization> getOrganizationDataMap() {
         SparseArray<Organization> idOrganizationMap = new SparseArray<>();
-        Cursor noteCur = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY, TITLE}, CONTENT_ITEM_TYPE);
+        Cursor noteCur = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY, TITLE, DEPARTMENT}, CONTENT_ITEM_TYPE);
         if (noteCur != null) {
             while (noteCur.moveToNext()) {
                 int id = noteCur.getInt(noteCur.getColumnIndex(ID_KEY));
                 String organizationName = noteCur.getString(noteCur.getColumnIndex(MAIN_DATA_KEY));
                 String organizationTitle = noteCur.getString(noteCur.getColumnIndex(TITLE));
+                String organizationDepartment = noteCur.getString(noteCur.getColumnIndex(DEPARTMENT));
                 idOrganizationMap.put(id, new Organization()
                         .setName(organizationName)
-                        .setTitle(organizationTitle));
+                        .setTitle(organizationTitle)
+                        .setDepartment(organizationDepartment));
             }
             noteCur.close();
         }
