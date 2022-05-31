@@ -137,11 +137,7 @@ class ContactsGetter {
         SparseArray<List<Address>> addressDataMap = mEnabledFields.contains(FieldType.ADDRESS) ? getDataMap(getCursorFromContentType(WITH_LABEL_PROJECTION, StructuredPostal.CONTENT_ITEM_TYPE), new WithLabelCreator<Address>() {
             @Override
             public Address create(String mainData, int contactId, int labelId, String labelName) {
-                Address address;
-                if (labelName != null)
-                    address = new Address(mainData, labelName);
-                else
-                    address = new Address(mCtx, mainData, labelId);
+                Address address = new Address(mCtx, mainData, labelId);
                 address.setContactId(contactId);
                 return address;
             }
