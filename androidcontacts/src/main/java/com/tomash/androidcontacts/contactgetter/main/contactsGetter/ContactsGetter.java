@@ -85,7 +85,7 @@ class ContactsGetter {
         return mResolver.query(
                 ContactsContract.DeletedContacts.CONTENT_URI,
                 DELETED_PROJECTION,
-                String.format(Locale.ENGLISH,"%s >= %d", ContactsContract.DeletedContacts.CONTACT_DELETED_TIMESTAMP, since),
+                String.format(Locale.ENGLISH, "%s >= %d", ContactsContract.DeletedContacts.CONTACT_DELETED_TIMESTAMP, since),
                 null,
                 ContactsContract.DeletedContacts.CONTACT_ID
         );
@@ -307,19 +307,29 @@ class ContactsGetter {
                 StructuredName.FAMILY_NAME, StructuredName.PREFIX, StructuredName.MIDDLE_NAME, StructuredName.SUFFIX, StructuredName.PHONETIC_GIVEN_NAME}, StructuredName.CONTENT_ITEM_TYPE);
         SparseArray<NameData> nameDataSparseArray = new SparseArray<>();
         if (nameCursor != null) {
+            int ID_KEY_INDEX = nameCursor.getColumnIndex(ID_KEY);
+            int DISPLAY_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.DISPLAY_NAME);
+            int GIVEN_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.GIVEN_NAME);
+            int FAMILY_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.FAMILY_NAME);
+            int PREFIX_INDEX = nameCursor.getColumnIndex(StructuredName.PREFIX);
+            int MIDDLE_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.MIDDLE_NAME);
+            int SUFFIX_INDEX = nameCursor.getColumnIndex(StructuredName.SUFFIX);
+            int PHONETIC_GIVEN_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.PHONETIC_GIVEN_NAME);
+            int PHONETIC_MIDDLE_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.PHONETIC_MIDDLE_NAME);
+            int PHONETIC_FAMILY_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.PHONETIC_FAMILY_NAME);
             while (nameCursor.moveToNext()) {
-                int id = nameCursor.getInt(nameCursor.getColumnIndex(ID_KEY));
+                int id = nameCursor.getInt(ID_KEY_INDEX);
                 if (nameDataSparseArray.get(id) == null)
                     nameDataSparseArray.put(id, new NameData()
-                            .setFullName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.DISPLAY_NAME)))
-                            .setFirstName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.GIVEN_NAME)))
-                            .setSurname(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.FAMILY_NAME)))
-                            .setNamePrefix(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PREFIX)))
-                            .setMiddleName(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.MIDDLE_NAME)))
-                            .setNameSuffix(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.SUFFIX)))
-                            .setPhoneticFirst(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_GIVEN_NAME)))
-                            .setPhoneticMiddle(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_MIDDLE_NAME)))
-                            .setPhoneticLast(nameCursor.getString(nameCursor.getColumnIndex(StructuredName.PHONETIC_FAMILY_NAME)))
+                            .setFullName(nameCursor.getString(DISPLAY_NAME_INDEX))
+                            .setFirstName(nameCursor.getString(GIVEN_NAME_INDEX))
+                            .setSurname(nameCursor.getString(FAMILY_NAME_INDEX))
+                            .setNamePrefix(nameCursor.getString(PREFIX_INDEX))
+                            .setMiddleName(nameCursor.getString(MIDDLE_NAME_INDEX))
+                            .setNameSuffix(nameCursor.getString(SUFFIX_INDEX))
+                            .setPhoneticFirst(nameCursor.getString(PHONETIC_GIVEN_NAME_INDEX))
+                            .setPhoneticMiddle(nameCursor.getString(PHONETIC_MIDDLE_NAME_INDEX))
+                            .setPhoneticLast(nameCursor.getString(PHONETIC_FAMILY_NAME_INDEX))
                     );
             }
             nameCursor.close();
@@ -333,11 +343,15 @@ class ContactsGetter {
         SparseArray<List<IMAddress>> idImAddressMap = new SparseArray<>();
         Cursor cur = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY, Im.PROTOCOL, Im.CUSTOM_PROTOCOL}, Im.CONTENT_ITEM_TYPE);
         if (cur != null) {
+            int ID_KEY_INDEX = cur.getColumnIndex(ID_KEY);
+            int MAIN_DATA_KEY_INDEX = cur.getColumnIndex(MAIN_DATA_KEY);
+            int PROTOCOL_INDEX = cur.getColumnIndex(Im.PROTOCOL);
+            int CUSTOM_PROTOCOL_INDEX = cur.getColumnIndex(Im.CUSTOM_PROTOCOL);
             while (cur.moveToNext()) {
-                int id = cur.getInt(cur.getColumnIndex(ID_KEY));
-                String data = cur.getString(cur.getColumnIndex(MAIN_DATA_KEY));
-                int labelId = cur.getInt(cur.getColumnIndex(Im.PROTOCOL));
-                String customLabel = cur.getString(cur.getColumnIndex(Im.CUSTOM_PROTOCOL));
+                int id = cur.getInt(ID_KEY_INDEX);
+                String data = cur.getString(MAIN_DATA_KEY_INDEX);
+                int labelId = cur.getInt(PROTOCOL_INDEX);
+                String customLabel = cur.getString(CUSTOM_PROTOCOL_INDEX);
                 IMAddress current;
                 if (customLabel == null)
                     current = new IMAddress(mCtx, data, labelId);
@@ -359,17 +373,17 @@ class ContactsGetter {
         Cursor phoneCursor = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY, LABEL_DATA_KEY, CUSTOM_LABEL_DATA_KEY, ContactsContract.Data.IS_PRIMARY}, Phone.CONTENT_ITEM_TYPE);
         SparseArray<List<PhoneNumber>> dataSparseArray = new SparseArray<>();
         if (phoneCursor != null) {
+            int ID_KEY_INDEX = phoneCursor.getColumnIndex(ID_KEY);
+            int MAIN_DATA_KEY_INDEX = phoneCursor.getColumnIndex(MAIN_DATA_KEY);
+            int LABEL_DATA_KEY_INDEX = phoneCursor.getColumnIndex(LABEL_DATA_KEY);
+            int IS_PRIMARY_INDEX = phoneCursor.getColumnIndex(ContactsContract.Data.IS_PRIMARY);
             while (phoneCursor.moveToNext()) {
-                int id = phoneCursor.getInt(phoneCursor.getColumnIndex(ID_KEY));
-                String data = phoneCursor.getString(phoneCursor.getColumnIndex(MAIN_DATA_KEY));
-                int labelId = phoneCursor.getInt(phoneCursor.getColumnIndex(LABEL_DATA_KEY));
-                boolean isPrimary = phoneCursor.getInt(phoneCursor.getColumnIndex(ContactsContract.Data.IS_PRIMARY)) == 1;
-                String customLabel = phoneCursor.getString(phoneCursor.getColumnIndex(CUSTOM_LABEL_DATA_KEY));
+                int id = phoneCursor.getInt(ID_KEY_INDEX);
+                String data = phoneCursor.getString(MAIN_DATA_KEY_INDEX);
+                int labelId = phoneCursor.getInt(LABEL_DATA_KEY_INDEX);
+                boolean isPrimary = phoneCursor.getInt(IS_PRIMARY_INDEX) == 1;
                 PhoneNumber number;
-                if (customLabel != null)
-                    number = new PhoneNumber(data, customLabel);
-                else
-                    number = new PhoneNumber(mCtx, data, labelId);
+                number = new PhoneNumber(mCtx, data, labelId);
                 number.setContactId(id);
                 number.setPrimary(isPrimary);
                 List<PhoneNumber> currentDataList = dataSparseArray.get(id);
@@ -388,9 +402,11 @@ class ContactsGetter {
         SparseArray<String> idNoteMap = new SparseArray<>();
         Cursor noteCur = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY}, contentType);
         if (noteCur != null) {
+            int ID_KEY_INDEX = noteCur.getColumnIndex(ID_KEY);
+            int MAIN_DATA_KEY_INDEX = noteCur.getColumnIndex(MAIN_DATA_KEY);
             while (noteCur.moveToNext()) {
-                int id = noteCur.getInt(noteCur.getColumnIndex(ID_KEY));
-                String note = noteCur.getString(noteCur.getColumnIndex(MAIN_DATA_KEY));
+                int id = noteCur.getInt(ID_KEY_INDEX);
+                String note = noteCur.getString(MAIN_DATA_KEY_INDEX);
                 if (note != null) idNoteMap.put(id, note);
             }
             noteCur.close();
@@ -402,11 +418,15 @@ class ContactsGetter {
         SparseArray<Organization> idOrganizationMap = new SparseArray<>();
         Cursor noteCur = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY, TITLE, DEPARTMENT}, CONTENT_ITEM_TYPE);
         if (noteCur != null) {
+            int ID_KEY_INDEX = noteCur.getColumnIndex(ID_KEY);
+            int MAIN_DATA_KEY_INDEX = noteCur.getColumnIndex(MAIN_DATA_KEY);
+            int TITLE_INDEX = noteCur.getColumnIndex(TITLE);
+            int DEPARTMENT_INDEX = noteCur.getColumnIndex(DEPARTMENT);
             while (noteCur.moveToNext()) {
-                int id = noteCur.getInt(noteCur.getColumnIndex(ID_KEY));
-                String organizationName = noteCur.getString(noteCur.getColumnIndex(MAIN_DATA_KEY));
-                String organizationTitle = noteCur.getString(noteCur.getColumnIndex(TITLE));
-                String organizationDepartment = noteCur.getString(noteCur.getColumnIndex(DEPARTMENT));
+                int id = noteCur.getInt(ID_KEY_INDEX);
+                String organizationName = noteCur.getString(MAIN_DATA_KEY_INDEX);
+                String organizationTitle = noteCur.getString(TITLE_INDEX);
+                String organizationDepartment = noteCur.getString(DEPARTMENT_INDEX);
                 idOrganizationMap.put(id, new Organization()
                         .setName(organizationName)
                         .setTitle(organizationTitle)
@@ -421,11 +441,15 @@ class ContactsGetter {
     private <T extends WithLabel> SparseArray<List<T>> getDataMap(Cursor dataCursor, WithLabelCreator<T> creator) {
         SparseArray<List<T>> dataSparseArray = new SparseArray<>();
         if (dataCursor != null) {
+            int ID_KEY_INDEX = dataCursor.getColumnIndex(ID_KEY);
+            int MAIN_DATA_KEY_INDEX = dataCursor.getColumnIndex(MAIN_DATA_KEY);
+            int LABEL_DATA_KEY_INDEX = dataCursor.getColumnIndex(LABEL_DATA_KEY);
+            int CUSTOM_LABEL_DATA_KEY_INDEX = dataCursor.getColumnIndex(CUSTOM_LABEL_DATA_KEY);
             while (dataCursor.moveToNext()) {
-                int id = dataCursor.getInt(dataCursor.getColumnIndex(ID_KEY));
-                String data = dataCursor.getString(dataCursor.getColumnIndex(MAIN_DATA_KEY));
-                int labelId = dataCursor.getInt(dataCursor.getColumnIndex(LABEL_DATA_KEY));
-                String customLabel = dataCursor.getString(dataCursor.getColumnIndex(CUSTOM_LABEL_DATA_KEY));
+                int id = dataCursor.getInt(ID_KEY_INDEX);
+                String data = dataCursor.getString(MAIN_DATA_KEY_INDEX);
+                int labelId = dataCursor.getInt(LABEL_DATA_KEY_INDEX);
+                String customLabel = dataCursor.getString(CUSTOM_LABEL_DATA_KEY_INDEX);
                 T current = creator.create(data, id, labelId, customLabel);
                 List<T> currentDataList = dataSparseArray.get(id);
                 if (currentDataList == null) {
