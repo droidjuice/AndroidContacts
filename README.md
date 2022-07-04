@@ -1,8 +1,8 @@
 AndroidContacts
 ===================
 ----------------------------------
-[![GitHub license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/blainepwnz/AndroidContacts/blob/master/LICENSE.txt)
-[![Download](https://api.bintray.com/packages/blainepwnz/maven/androidcontacts/images/download.svg) ](https://bintray.com/blainepwnz/maven/androidcontacts/_latestVersion)
+[![GitHub license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/samai2/AndroidContacts/blob/master/LICENSE.txt)
+
 
 Gradle Dependency
 ---------------------------
