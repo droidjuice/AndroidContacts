@@ -25,8 +25,8 @@ public abstract class ContactData {
     private Organization organization = new Organization();
     private NameData nameData = new NameData();
     private String compositeName;
-    private String accountName;
-    private String accountType;
+    private final ArrayList<String> accountName = new ArrayList<>();
+    private final ArrayList<String> accountType = new ArrayList<>();
     private long lastModificationDate;
     private Uri updatedPhotoUri;
     private Bitmap updatedBitmap;
@@ -256,21 +256,21 @@ public abstract class ContactData {
         return this;
     }
 
-    public String getAccountName() {
+    public ArrayList<String> getAccountName() {
         return accountName;
     }
 
     public ContactData setAccountName(String accountName) {
-        this.accountName = accountName;
+        this.accountName.add(accountName);
         return this;
     }
 
-    public String getAccountType() {
+    public ArrayList<String> getAccountType() {
         return accountType;
     }
 
     public ContactData setAccountType(String accountType) {
-        this.accountType = accountType;
+        this.accountType.add(accountType);
         return this;
     }
 

@@ -40,12 +40,12 @@ import java.util.List;
 import java.util.Locale;
 
 class ContactsGetter {
-    private ContentResolver mResolver;
-    private Context mCtx;
-    private List<FieldType> mEnabledFields;
-    private String[] mSelectionArgs;
-    private String mSorting;
-    private String mSelection;
+    private final ContentResolver mResolver;
+    private final Context mCtx;
+    private final List<FieldType> mEnabledFields;
+    private final String[] mSelectionArgs;
+    private final String mSorting;
+    private final String mSelection;
     private static final String MAIN_DATA_KEY = "data1";
     private static final String LABEL_DATA_KEY = "data2";
     private static final String CUSTOM_LABEL_DATA_KEY = "data3";
@@ -218,8 +218,8 @@ class ContactsGetter {
             result.add(data);
         }
         mainCursor.close();
+        int id = additionalDataCursor.getInt(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
         while (additionalDataCursor.moveToNext()) {
-            int id = additionalDataCursor.getInt(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
             if (id >= 0) {
                 ContactData relatedContactData = contactsSparse.get(id);
                 if (relatedContactData != null) {
@@ -239,9 +239,15 @@ class ContactsGetter {
         SparseArray<List<String>> idSiteMap = new SparseArray<>();
         Cursor websiteCur = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY}, Website.CONTENT_ITEM_TYPE);
         if (websiteCur != null) {
+            int idKey = websiteCur.getColumnIndex(ID_KEY);
+            int mainDataKey = websiteCur.getColumnIndex(MAIN_DATA_KEY);
+            if (idKey == -1 || mainDataKey == -1) {
+                return idSiteMap;
+            }
+
             while (websiteCur.moveToNext()) {
-                int id = websiteCur.getInt(websiteCur.getColumnIndex(ID_KEY));
-                String website = websiteCur.getString(websiteCur.getColumnIndex(MAIN_DATA_KEY));
+                int id = websiteCur.getInt(idKey);
+                String website = websiteCur.getString(mainDataKey);
                 List<String> currentWebsiteList = idSiteMap.get(id);
                 if (currentWebsiteList == null) {
                     currentWebsiteList = new ArrayList<>();
@@ -281,9 +287,14 @@ class ContactsGetter {
         SparseArray<Group> groupMapById = getGroupsMap();
         Cursor groupMembershipCursor = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY}, GroupMembership.CONTENT_ITEM_TYPE);
         if (groupMembershipCursor != null) {
+            int idKey = groupMembershipCursor.getColumnIndex(ID_KEY);
+            int mainDataKey = groupMembershipCursor.getColumnIndex(MAIN_DATA_KEY);
+            if (idKey == -1 || mainDataKey == -1) {
+                return idListGroupMap;
+            }
             while (groupMembershipCursor.moveToNext()) {
-                int id = groupMembershipCursor.getInt(groupMembershipCursor.getColumnIndex(ID_KEY));
-                int groupId = groupMembershipCursor.getInt(groupMembershipCursor.getColumnIndex(MAIN_DATA_KEY));
+                int id = groupMembershipCursor.getInt(idKey);
+                int groupId = groupMembershipCursor.getInt(mainDataKey);
                 List<Group> currentIdGroupList = idListGroupMap.get(id);
                 if (currentIdGroupList == null) {
                     currentIdGroupList = new ArrayList<>();
@@ -343,6 +354,9 @@ class ContactsGetter {
             int MAIN_DATA_KEY_INDEX = cur.getColumnIndex(MAIN_DATA_KEY);
             int PROTOCOL_INDEX = cur.getColumnIndex(Im.PROTOCOL);
             int CUSTOM_PROTOCOL_INDEX = cur.getColumnIndex(Im.CUSTOM_PROTOCOL);
+            if (ID_KEY_INDEX == -1 || MAIN_DATA_KEY_INDEX == -1 || PROTOCOL_INDEX == -1 || CUSTOM_PROTOCOL_INDEX == -1) {
+                return idImAddressMap;
+            }
             while (cur.moveToNext()) {
                 int id = cur.getInt(ID_KEY_INDEX);
                 String data = cur.getString(MAIN_DATA_KEY_INDEX);
