@@ -36,6 +36,7 @@ import com.tomash.androidcontacts.contactgetter.interfaces.WithLabel;
 import com.tomash.androidcontacts.contactgetter.main.FieldType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -178,21 +179,31 @@ class ContactsGetter {
                 return relation;
             }
         }) : new SparseArray<List<Relation>>();
-        SparseArray<List<IMAddress>> imAddressesDataMap = mEnabledFields.contains(FieldType.IM_ADDRESSES) ? getIMAddressesMap() : new SparseArray<List<IMAddress>>();
-        SparseArray<List<String>> websitesDataMap = mEnabledFields.contains(FieldType.WEBSITES) ? getWebSitesMap() : new SparseArray<List<String>>();
-        SparseArray<String> notesDataMap = mEnabledFields.contains(FieldType.NOTES) ? getStringDataMap(Note.CONTENT_ITEM_TYPE) : new SparseArray<String>();
-        SparseArray<String> nicknameDataMap = mEnabledFields.contains(FieldType.NICKNAME) ? getStringDataMap(Nickname.CONTENT_ITEM_TYPE) : new SparseArray<String>();
-        SparseArray<String> sipDataMap = mEnabledFields.contains(FieldType.SIP) ? getStringDataMap(SipAddress.CONTENT_ITEM_TYPE) : new SparseArray<String>();
-        SparseArray<Organization> organisationDataMap = mEnabledFields.contains(FieldType.ORGANIZATION) ? getOrganizationDataMap() : new SparseArray<Organization>();
-        SparseArray<NameData> nameDataMap = mEnabledFields.contains(FieldType.NAME_DATA) ? getNameDataMap() : new SparseArray<NameData>();
-        SparseArray<List<Group>> groupsDataMap = mEnabledFields.contains(FieldType.GROUPS) ? getGroupsDataMap() : new SparseArray<List<Group>>();
+        SparseArray<List<IMAddress>> imAddressesDataMap = mEnabledFields.contains(FieldType.IM_ADDRESSES) ? getIMAddressesMap() : new SparseArray<>();
+        SparseArray<List<String>> websitesDataMap = mEnabledFields.contains(FieldType.WEBSITES) ? getWebSitesMap() : new SparseArray<>();
+        SparseArray<String> notesDataMap = mEnabledFields.contains(FieldType.NOTES) ? getStringDataMap(Note.CONTENT_ITEM_TYPE) : new SparseArray<>();
+        SparseArray<String> nicknameDataMap = mEnabledFields.contains(FieldType.NICKNAME) ? getStringDataMap(Nickname.CONTENT_ITEM_TYPE) : new SparseArray<>();
+        SparseArray<String> sipDataMap = mEnabledFields.contains(FieldType.SIP) ? getStringDataMap(SipAddress.CONTENT_ITEM_TYPE) : new SparseArray<>();
+        SparseArray<Organization> organisationDataMap = mEnabledFields.contains(FieldType.ORGANIZATION) ? getOrganizationDataMap() : new SparseArray<>();
+        SparseArray<NameData> nameDataMap = mEnabledFields.contains(FieldType.NAME_DATA) ? getNameDataMap() : new SparseArray<>();
+        SparseArray<List<Group>> groupsDataMap = mEnabledFields.contains(FieldType.GROUPS) ? getGroupsDataMap() : new SparseArray<>();
+
+        int ID_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts._ID);
+        int CONTACT_LAST_UPDATED_TIMESTAMP_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP);
+        int PHOTO_URI_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI);
+        int LOOKUP_KEY_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY);
+        int STARRED_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.STARRED);
+        int DISPLAY_NAME_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+        if (isIndexNegative(ID_IDX, CONTACT_LAST_UPDATED_TIMESTAMP_IDX, PHOTO_URI_IDX, LOOKUP_KEY_IDX, STARRED_IDX, DISPLAY_NAME_IDX)) {
+            mainCursor.close();
+            return result;
+        }
         while (mainCursor.moveToNext()) {
-            int id = mainCursor.getInt(mainCursor.getColumnIndex(ContactsContract.Contacts._ID));
-            long date = 0;
-            date = mainCursor.getLong(mainCursor.getColumnIndex(ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP));
-            String photoUriString = mainCursor.getString(mainCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI));
-            String lookupKey = mainCursor.getString(mainCursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
-            boolean isFavorite = mainCursor.getInt(mainCursor.getColumnIndex(ContactsContract.Contacts.STARRED)) == 1;
+            int id = mainCursor.getInt(ID_IDX);
+            long date = mainCursor.getLong(CONTACT_LAST_UPDATED_TIMESTAMP_IDX);
+            String photoUriString = mainCursor.getString(PHOTO_URI_IDX);
+            String lookupKey = mainCursor.getString(LOOKUP_KEY_IDX);
+            boolean isFavorite = mainCursor.getInt(STARRED_IDX) == 1;
             Uri photoUri = photoUriString == null ? Uri.EMPTY : Uri.parse(photoUriString);
             T data = (T) getContactData()
                     .setContactId(id)
@@ -213,23 +224,30 @@ class ContactsGetter {
                     .setPhotoUri(photoUri)
                     .setFavorite(isFavorite)
                     .setGroupList(groupsDataMap.get(id))
-                    .setCompositeName(mainCursor.getString(mainCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)));
+                    .setCompositeName(mainCursor.getString(DISPLAY_NAME_IDX));
             contactsSparse.put(id, data);
             result.add(data);
         }
         mainCursor.close();
-        int id = additionalDataCursor.getInt(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID));
-        while (additionalDataCursor.moveToNext()) {
-            if (id >= 0) {
-                ContactData relatedContactData = contactsSparse.get(id);
-                if (relatedContactData != null) {
-                    String accountType = additionalDataCursor.getString(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
-                    String accountName = additionalDataCursor.getString(additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME));
-                    relatedContactData.setAccountName(accountName)
-                            .setAccountType(accountType);
+        int CONTACT_ID_IDX = additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID);
+        int ACCOUNT_TYPE_IDX = additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE);
+        int ACCOUNT_NAME_IDX = additionalDataCursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME);
+
+        if (!isIndexNegative(ACCOUNT_NAME_IDX, ACCOUNT_TYPE_IDX, CONTACT_ID_IDX)) {
+            while (additionalDataCursor.moveToNext()) {
+                int id = additionalDataCursor.getInt(CONTACT_ID_IDX);
+                if (id >= 0) {
+                    ContactData relatedContactData = contactsSparse.get(id);
+                    if (relatedContactData != null) {
+                        String accountType = additionalDataCursor.getString(ACCOUNT_TYPE_IDX);
+                        String accountName = additionalDataCursor.getString(ACCOUNT_NAME_IDX);
+                        relatedContactData.setAccountName(accountName)
+                                .setAccountType(accountType);
+                    }
                 }
             }
         }
+
         additionalDataCursor.close();
         return result;
     }
@@ -239,15 +257,16 @@ class ContactsGetter {
         SparseArray<List<String>> idSiteMap = new SparseArray<>();
         Cursor websiteCur = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY}, Website.CONTENT_ITEM_TYPE);
         if (websiteCur != null) {
-            int idKey = websiteCur.getColumnIndex(ID_KEY);
-            int mainDataKey = websiteCur.getColumnIndex(MAIN_DATA_KEY);
-            if (idKey == -1 || mainDataKey == -1) {
+            int ID_KEY_IDX = websiteCur.getColumnIndex(ID_KEY);
+            int MAIN_DATA_KEY_IDX = websiteCur.getColumnIndex(MAIN_DATA_KEY);
+            if (isIndexNegative(ID_KEY_IDX, MAIN_DATA_KEY_IDX)) {
+                websiteCur.close();
                 return idSiteMap;
             }
 
             while (websiteCur.moveToNext()) {
-                int id = websiteCur.getInt(idKey);
-                String website = websiteCur.getString(mainDataKey);
+                int id = websiteCur.getInt(ID_KEY_IDX);
+                String website = websiteCur.getString(MAIN_DATA_KEY_IDX);
                 List<String> currentWebsiteList = idSiteMap.get(id);
                 if (currentWebsiteList == null) {
                     currentWebsiteList = new ArrayList<>();
@@ -270,9 +289,17 @@ class ContactsGetter {
                 }, null, null, null
         );
         if (groupCursor != null) {
+            int ID_IDX = groupCursor.getColumnIndex(ContactsContract.Groups._ID);
+            int TITLE_IDX = groupCursor.getColumnIndex(ContactsContract.Groups.TITLE);
+
+            if (isIndexNegative(ID_IDX, TITLE_IDX)) {
+                groupCursor.close();
+                return idGroupMap;
+            }
+
             while (groupCursor.moveToNext()) {
-                int id = groupCursor.getInt(groupCursor.getColumnIndex(ContactsContract.Groups._ID));
-                String title = groupCursor.getString(groupCursor.getColumnIndex(ContactsContract.Groups.TITLE));
+                int id = groupCursor.getInt(ID_IDX);
+                String title = groupCursor.getString(TITLE_IDX);
                 idGroupMap.put(id, new Group()
                         .setGroupId(id)
                         .setGroupTitle(title));
@@ -287,14 +314,15 @@ class ContactsGetter {
         SparseArray<Group> groupMapById = getGroupsMap();
         Cursor groupMembershipCursor = getCursorFromContentType(new String[]{ID_KEY, MAIN_DATA_KEY}, GroupMembership.CONTENT_ITEM_TYPE);
         if (groupMembershipCursor != null) {
-            int idKey = groupMembershipCursor.getColumnIndex(ID_KEY);
-            int mainDataKey = groupMembershipCursor.getColumnIndex(MAIN_DATA_KEY);
-            if (idKey == -1 || mainDataKey == -1) {
+            int ID_KEY_IDX = groupMembershipCursor.getColumnIndex(ID_KEY);
+            int MAIN_DATA_KEY_IDX = groupMembershipCursor.getColumnIndex(MAIN_DATA_KEY);
+            if (isIndexNegative(ID_KEY_IDX, MAIN_DATA_KEY_IDX)) {
+                groupMembershipCursor.close();
                 return idListGroupMap;
             }
             while (groupMembershipCursor.moveToNext()) {
-                int id = groupMembershipCursor.getInt(idKey);
-                int groupId = groupMembershipCursor.getInt(mainDataKey);
+                int id = groupMembershipCursor.getInt(ID_KEY_IDX);
+                int groupId = groupMembershipCursor.getInt(MAIN_DATA_KEY_IDX);
                 List<Group> currentIdGroupList = idListGroupMap.get(id);
                 if (currentIdGroupList == null) {
                     currentIdGroupList = new ArrayList<>();
@@ -324,6 +352,14 @@ class ContactsGetter {
             int PHONETIC_GIVEN_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.PHONETIC_GIVEN_NAME);
             int PHONETIC_MIDDLE_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.PHONETIC_MIDDLE_NAME);
             int PHONETIC_FAMILY_NAME_INDEX = nameCursor.getColumnIndex(StructuredName.PHONETIC_FAMILY_NAME);
+            if (
+                    isIndexNegative(ID_KEY_INDEX, DISPLAY_NAME_INDEX, GIVEN_NAME_INDEX, FAMILY_NAME_INDEX, PREFIX_INDEX,
+                            MIDDLE_NAME_INDEX, SUFFIX_INDEX, PHONETIC_GIVEN_NAME_INDEX, PHONETIC_MIDDLE_NAME_INDEX, PHONETIC_FAMILY_NAME_INDEX)
+            ) {
+                nameCursor.close();
+                return nameDataSparseArray;
+            }
+
             while (nameCursor.moveToNext()) {
                 int id = nameCursor.getInt(ID_KEY_INDEX);
                 if (nameDataSparseArray.get(id) == null)
@@ -354,7 +390,8 @@ class ContactsGetter {
             int MAIN_DATA_KEY_INDEX = cur.getColumnIndex(MAIN_DATA_KEY);
             int PROTOCOL_INDEX = cur.getColumnIndex(Im.PROTOCOL);
             int CUSTOM_PROTOCOL_INDEX = cur.getColumnIndex(Im.CUSTOM_PROTOCOL);
-            if (ID_KEY_INDEX == -1 || MAIN_DATA_KEY_INDEX == -1 || PROTOCOL_INDEX == -1 || CUSTOM_PROTOCOL_INDEX == -1) {
+            if (isIndexNegative(ID_KEY_INDEX, MAIN_DATA_KEY_INDEX, PROTOCOL_INDEX, CUSTOM_PROTOCOL_INDEX)) {
+                cur.close();
                 return idImAddressMap;
             }
             while (cur.moveToNext()) {
@@ -387,6 +424,10 @@ class ContactsGetter {
             int MAIN_DATA_KEY_INDEX = phoneCursor.getColumnIndex(MAIN_DATA_KEY);
             int LABEL_DATA_KEY_INDEX = phoneCursor.getColumnIndex(LABEL_DATA_KEY);
             int IS_PRIMARY_INDEX = phoneCursor.getColumnIndex(ContactsContract.Data.IS_PRIMARY);
+            if (isIndexNegative(ID_KEY_INDEX, MAIN_DATA_KEY_INDEX, LABEL_DATA_KEY_INDEX, IS_PRIMARY_INDEX)) {
+                phoneCursor.close();
+                return dataSparseArray;
+            }
             while (phoneCursor.moveToNext()) {
                 int id = phoneCursor.getInt(ID_KEY_INDEX);
                 String data = phoneCursor.getString(MAIN_DATA_KEY_INDEX);
@@ -414,6 +455,10 @@ class ContactsGetter {
         if (noteCur != null) {
             int ID_KEY_INDEX = noteCur.getColumnIndex(ID_KEY);
             int MAIN_DATA_KEY_INDEX = noteCur.getColumnIndex(MAIN_DATA_KEY);
+            if (isIndexNegative(ID_KEY_INDEX, MAIN_DATA_KEY_INDEX)) {
+                noteCur.close();
+                return idNoteMap;
+            }
             while (noteCur.moveToNext()) {
                 int id = noteCur.getInt(ID_KEY_INDEX);
                 String note = noteCur.getString(MAIN_DATA_KEY_INDEX);
@@ -432,6 +477,10 @@ class ContactsGetter {
             int MAIN_DATA_KEY_INDEX = noteCur.getColumnIndex(MAIN_DATA_KEY);
             int TITLE_INDEX = noteCur.getColumnIndex(TITLE);
             int DEPARTMENT_INDEX = noteCur.getColumnIndex(DEPARTMENT);
+            if (isIndexNegative(ID_KEY_INDEX, MAIN_DATA_KEY_INDEX, TITLE_INDEX, DEPARTMENT_INDEX)) {
+                noteCur.close();
+                return idOrganizationMap;
+            }
             while (noteCur.moveToNext()) {
                 int id = noteCur.getInt(ID_KEY_INDEX);
                 String organizationName = noteCur.getString(MAIN_DATA_KEY_INDEX);
@@ -455,6 +504,12 @@ class ContactsGetter {
             int MAIN_DATA_KEY_INDEX = dataCursor.getColumnIndex(MAIN_DATA_KEY);
             int LABEL_DATA_KEY_INDEX = dataCursor.getColumnIndex(LABEL_DATA_KEY);
             int CUSTOM_LABEL_DATA_KEY_INDEX = dataCursor.getColumnIndex(CUSTOM_LABEL_DATA_KEY);
+
+            if (isIndexNegative(ID_KEY_INDEX, MAIN_DATA_KEY_INDEX, LABEL_DATA_KEY_INDEX, CUSTOM_LABEL_DATA_KEY_INDEX)) {
+                dataCursor.close();
+                return dataSparseArray;
+            }
+
             while (dataCursor.moveToNext()) {
                 int id = dataCursor.getInt(ID_KEY_INDEX);
                 String data = dataCursor.getString(MAIN_DATA_KEY_INDEX);
@@ -484,4 +539,7 @@ class ContactsGetter {
         T create(String mainData, int contactId, int labelId, String labelName);
     }
 
+    private Boolean isIndexNegative(int... index) {
+        return Arrays.stream(index).anyMatch(idx -> idx == -1);
+    }
 }
