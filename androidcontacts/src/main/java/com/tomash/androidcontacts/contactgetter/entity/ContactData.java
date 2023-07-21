@@ -25,6 +25,7 @@ public abstract class ContactData {
     private Organization organization = new Organization();
     private NameData nameData = new NameData();
     private String compositeName;
+    private String compositeNameAlt;
     private final ArrayList<String> accountName = new ArrayList<>();
     private final ArrayList<String> accountType = new ArrayList<>();
     private long lastModificationDate;
@@ -127,6 +128,15 @@ public abstract class ContactData {
 
     public ContactData setCompositeName(String compositeName) {
         this.compositeName = compositeName;
+        return this;
+    }
+
+    public String getCompositeNameAlt() {
+        return compositeNameAlt;
+    }
+
+    public ContactData setCompositeNameAlt(String compositeName) {
+        this.compositeNameAlt = compositeName;
         return this;
     }
 
