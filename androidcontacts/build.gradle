@@ -8,11 +8,11 @@ apply from: '../deps.gradle'
 
 android {
     compileSdkVersion versions.compileSdkVersion
-    buildToolsVersion "30.0.2"
+    buildToolsVersion "33.0.2"
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 30
+        minSdkVersion 21
+        targetSdkVersion 34
         versionCode versions.buildCode
         versionName versions.publishVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

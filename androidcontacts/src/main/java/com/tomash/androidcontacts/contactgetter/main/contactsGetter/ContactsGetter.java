@@ -53,9 +53,8 @@ class ContactsGetter {
     private static final String ID_KEY = "contact_id";
     private static final String[] WITH_LABEL_PROJECTION = new String[]{ID_KEY, MAIN_DATA_KEY, LABEL_DATA_KEY, CUSTOM_LABEL_DATA_KEY};
     private static final String[] CONTACTS_PROJECTION = new String[]{ContactsContract.Contacts._ID, ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP,
-            ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.STARRED};
-    private static final String[] CONTACTS_PROJECTION_LOW_API = new String[]{ContactsContract.Contacts._ID,
-            ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.STARRED};
+            ContactsContract.Contacts.PHOTO_URI, ContactsContract.Contacts.LOOKUP_KEY, ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+            ContactsContract.Contacts.DISPLAY_NAME_ALTERNATIVE, ContactsContract.Contacts.STARRED};
     private static final String[] ADDITIONAL_DATA_PROJECTION = new String[]{ContactsContract.Contacts._ID,
             ContactsContract.RawContacts.ACCOUNT_TYPE, ContactsContract.RawContacts.ACCOUNT_NAME, ContactsContract.RawContacts.CONTACT_ID};
     private Class<? extends ContactData> mContactDataClass;
@@ -193,8 +192,9 @@ class ContactsGetter {
         int PHOTO_URI_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI);
         int LOOKUP_KEY_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY);
         int STARRED_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.STARRED);
-        int DISPLAY_NAME_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
-        if (isIndexNegative(ID_IDX, CONTACT_LAST_UPDATED_TIMESTAMP_IDX, PHOTO_URI_IDX, LOOKUP_KEY_IDX, STARRED_IDX, DISPLAY_NAME_IDX)) {
+        int DISPLAY_NAME_PRI_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY);
+        int DISPLAY_NAME_ALT_IDX = mainCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_ALTERNATIVE);
+        if (isIndexNegative(ID_IDX, CONTACT_LAST_UPDATED_TIMESTAMP_IDX, PHOTO_URI_IDX, LOOKUP_KEY_IDX, STARRED_IDX, DISPLAY_NAME_PRI_IDX, DISPLAY_NAME_ALT_IDX)) {
             mainCursor.close();
             return result;
         }
@@ -224,7 +224,8 @@ class ContactsGetter {
                     .setPhotoUri(photoUri)
                     .setFavorite(isFavorite)
                     .setGroupList(groupsDataMap.get(id))
-                    .setCompositeName(mainCursor.getString(DISPLAY_NAME_IDX));
+                    .setCompositeName(mainCursor.getString(DISPLAY_NAME_PRI_IDX))
+                    .setCompositeNameAlt(mainCursor.getString(DISPLAY_NAME_ALT_IDX));
             contactsSparse.put(id, data);
             result.add(data);
         }
